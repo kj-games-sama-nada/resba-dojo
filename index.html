@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101322">
+  <meta name="description" content="12枚のデッキでCPUと対戦！ 3本先取の無料・オフライン対応カードバトル。">
+  <title>レスバ道場 | ブラウザカードバトル v0.1</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b0e19;--panel:#171b2d;--panel2:#202640;--line:#333b56;--ink:#f4f5fb;--muted:#a5acc6;--teal:#59e4c6;--pink:#ff89a9;--gold:#ffd281;--purple:#b6a0ff;--radius:18px}
+    *,*::before,*::after{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;min-width:320px;background:radial-gradient(circle at 10% 0%,#1b2850 0,transparent 27%),radial-gradient(circle at 90% 18%,#342044 0,transparent 32%),var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",Meiryo,sans-serif;line-height:1.55}
+    button{font:inherit;cursor:pointer}button:disabled{cursor:not-allowed;opacity:.45}button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+    .shell{width:min(100% - 28px,1100px);margin:0 auto}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 0 12px}
+    .brand{display:flex;align-items:center;gap:12px}.logo{width:46px;height:46px;display:grid;place-items:center;border:1px solid #6ceaca70;background:linear-gradient(140deg,#204953,#30315f);border-radius:15px;font-size:24px;box-shadow:0 8px 25px #0004}
+    .eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:10px;font-weight:800;color:var(--teal)}
+    .brand h1{font-size:23px;letter-spacing:.02em;line-height:1.2;margin:2px 0}
+    .topright{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}.coin{border:1px solid #96714e;background:#3b2c29a0;color:#ffe0a0;padding:7px 12px;border-radius:999px;font-size:14px;font-weight:850;white-space:nowrap}
+    .save-state{font-size:11px;color:var(--muted);white-space:nowrap}.save-state.failed{color:var(--pink)}
+    .hero{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(110deg,#1b3250,#20213d 55%,#30213f);border:1px solid #455578;border-radius:22px;padding:20px 22px;margin:8px 0 14px}
+    .hero:after{content:"VS";font-size:95px;line-height:1;font-weight:1000;letter-spacing:-.12em;color:#ffffff0b;position:absolute;right:30px;top:0;pointer-events:none}
+    .hero h2{font-size:clamp(22px,3.5vw,33px);margin:5px 0;font-weight:900;letter-spacing:.02em}.hero p{font-size:13px;color:#c7d0e4;margin:4px 0 0}.hero .tag{font-size:10px;letter-spacing:.1em;color:var(--teal);font-weight:900}
+    .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:20px;position:sticky;top:0;z-index:5;background:#0b0e19ee;padding:9px 0;backdrop-filter:blur(12px)}
+    .tab{padding:12px 5px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-size:13px;font-weight:850;transition:.15s}
+    .tab[aria-selected=true]{background:#263b49;border-color:#4dc4b2;color:#e7fff9;box-shadow:inset 0 0 0 1px #45b9a436}
+    .section{display:none}.section.active{display:block}.content{padding-bottom:50px;min-height:50vh}
+    .panel{background:linear-gradient(180deg,#1a1f33,#151a2b);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:14px;box-shadow:0 5px 24px #0002}
+    .panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.panel-head h3,.panel h3{margin:0;font-size:19px}.panel-head p,.secondary{color:var(--muted);font-size:13px;margin:5px 0 0}
+    .btn{border:0;border-radius:12px;padding:12px 18px;font-weight:900;transition:filter .15s,transform .15s;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+    .btn:hover{filter:brightness(1.13)}.btn:active{transform:translateY(1px)}
+    .btn.primary{background:linear-gradient(125deg,#5ce8c9,#7fe9d4);color:#10232d;box-shadow:0 5px 22px #3feab92c}.btn.soft{background:#28314a;color:#e9edff;border:1px solid #44506b}.btn.warn{background:#4a2b41;color:#ffcbda;border:1px solid #72405d}.btn.small{padding:8px 12px;font-size:12px}.btn.wide{width:100%;padding:15px;font-size:16px}
+    .pill{display:inline-flex;align-items:center;border-radius:999px;background:#2c3451;border:1px solid #475273;padding:4px 9px;font-size:11px;font-weight:850;white-space:nowrap}.pill.green{color:#9cf2d8;background:#193a39;border-color:#2e6760}.pill.gold{color:var(--gold);background:#3b3327;border-color:#6b5739}.pill.pink{color:#ffb4c6;background:#3d293c;border-color:#704063}
+    .score-board{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;background:linear-gradient(90deg,#1b343c,#1e2239 50%,#3a243b);border:1px solid #4a5872;border-radius:18px;padding:16px;margin-bottom:14px}
+    .score-person{display:flex;flex-direction:column;gap:6px}.score-person.right{text-align:right}.score-person strong{font-size:15px}.score-person .num{font-size:34px;line-height:1;font-weight:950}.score-person.right .num{color:#ff9db4}.score-person:not(.right) .num{color:var(--teal)}
+    .wins{display:flex;gap:5px}.score-person.right .wins{justify-content:flex-end}.pip{width:21px;height:8px;border:1px solid #59627d;border-radius:8px;background:#2d364d}.pip.on{background:var(--teal);border-color:var(--teal)}.score-person.right .pip.on{background:var(--pink);border-color:var(--pink)}
+    .vs{font-size:22px;font-style:italic;font-weight:1000;color:#d8d9eb;text-shadow:0 2px 9px #0008}.round-chip{font-size:11px;color:var(--muted);display:block;margin-top:4px;text-align:center}
+    .prompt{border:1px solid #53617f;border-radius:18px;padding:20px;background:radial-gradient(ellipse at top right,#2d3d60,#1b2238 70%);margin-bottom:14px}
+    .prompt h3{font-size:clamp(20px,3vw,27px);margin:7px 0 10px;line-height:1.4}.prompt p{font-size:13px;color:#cad3e5;margin:0}.prompt .pill{margin-right:6px}
+    .hand-header{display:flex;justify-content:space-between;align-items:end;margin:18px 0 10px;gap:10px}.hand-header h3{margin:0;font-size:18px}.hand-header p{color:var(--muted);font-size:12px;margin:0}
+    .card-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.card-grid.catalog{grid-template-columns:repeat(4,minmax(0,1fr))}.card-grid.deck-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .game-card{position:relative;overflow:hidden;width:100%;min-width:0;min-height:205px;display:flex;flex-direction:column;text-align:left;padding:14px;border-radius:15px;border:1px solid color-mix(in srgb,var(--card-color) 48%,#5b657c);background:linear-gradient(160deg,color-mix(in srgb,var(--card-color) 21%,#1d233a),#161b2d 67%);color:var(--ink);box-shadow:0 3px 15px #0004;transition:transform .15s,border-color .15s,box-shadow .15s}
+    .game-card:before{content:"";position:absolute;inset:0 0 auto;height:4px;background:var(--card-color)}.game-card:after{content:attr(data-glyph);position:absolute;top:25px;right:10px;font-size:77px;opacity:.09;pointer-events:none;filter:grayscale(1)}
+    button.game-card:hover{border-color:var(--card-color);box-shadow:0 0 0 1px var(--card-color),0 7px 22px #0006;transform:translateY(-2px)}button.game-card:active{transform:translateY(0)}.game-card.selected{outline:2px solid var(--teal);outline-offset:1px}.game-card.locked{filter:grayscale(.9);opacity:.6}
+    .card-top{display:flex;align-items:center;justify-content:space-between;gap:7px;position:relative;z-index:1}.card-type{font-size:11px;font-weight:900;color:var(--card-color)}.card-rarity{font-size:10px;color:#d8d9e7}.card-name{font-size:17px;font-weight:950;letter-spacing:.015em;line-height:1.4;margin:20px 0 7px;overflow-wrap:anywhere;position:relative;z-index:1}
+    .card-desc{font-size:11px;color:#bac2d6;margin:0 0 16px;line-height:1.55;position:relative;z-index:1;flex:1}.card-foot{display:flex;align-items:end;justify-content:space-between;gap:4px;position:relative;z-index:1}.power{font-size:11px;color:#dfe4f2;font-weight:850}.power b{font-size:25px;line-height:1}.card-action{white-space:nowrap;font-size:10px;color:#fff;background:#ffffff18;border-radius:8px;padding:5px 7px;font-weight:850;text-align:center}
+    .notice{padding:12px 14px;background:#262c41;border:1px solid #3b4767;border-radius:11px;color:#bec8dd;font-size:12px;margin-bottom:12px}.notice b{color:var(--teal)}
+    .result-panel{text-align:center;padding:24px 20px}.result-title{font-size:clamp(23px,5vw,32px);font-weight:1000;margin:4px 0}.result-title.win{color:var(--teal)}.result-title.lose{color:var(--pink)}.result-panel .versus{display:grid;grid-template-columns:1fr auto 1fr;gap:9px;align-items:center;margin:18px auto;max-width:650px}.versus .game-card{min-height:185px}.versus .score-label{font-weight:900;font-size:13px;margin-top:8px}.versus .score-label strong{font-size:30px;display:block}.versus .middle{font-size:20px;font-weight:900;color:var(--muted)}
+    .result-detail{background:#121829;border-radius:12px;border:1px solid #35405d;padding:12px;font-size:12px;color:#d1d9e8;text-align:left;margin:12px auto;max-width:650px;line-height:1.9}.result-detail b{color:#fff}.result-detail .cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .intro{display:grid;grid-template-columns:1.3fr .7fr;gap:16px;align-items:center;padding:28px}.intro h3{font-size:26px;margin:7px 0}.intro p{color:var(--muted);font-size:13px}.intro-mark{font-size:90px;text-align:center;filter:drop-shadow(0 8px 25px #3ce2c72d)}
+    .how{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.how div{background:#222942;border:1px solid #3c4764;border-radius:12px;padding:13px;font-size:12px;color:#c0c8df}.how b{display:block;color:#fff;font-size:13px;margin-bottom:5px}
+    .section-subtitle{font-size:14px;font-weight:900;margin:19px 0 9px}.stack{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.split{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}.stat{padding:14px;background:#232940;border:1px solid #3c4666;border-radius:12px}.stat strong{font-size:26px}.stat span{display:block;color:var(--muted);font-size:11px}
+    .gacha-hero{background:linear-gradient(120deg,#35305e,#32283e);border:1px solid #65549a;padding:22px;border-radius:18px;text-align:center}.gacha-symbol{font-size:54px}.gacha-hero h3{font-size:23px;margin:5px 0}.gacha-result{margin-top:16px;padding:15px;border:1px solid #8272b2;background:#231d40;border-radius:15px;display:flex;align-items:center;gap:16px;text-align:left}.gacha-result .game-card{width:180px;max-width:45%;flex-shrink:0;min-height:200px}.gacha-result h4{margin:0 0 5px;font-size:18px}.gacha-result p{color:#c5cbe0;font-size:13px}
+    .mini-info{font-size:12px;color:var(--muted)}.empty{padding:20px;text-align:center;color:var(--muted);border:1px dashed #47516f;border-radius:12px}.footer{border-top:1px solid #303954;padding:20px 0 35px;font-size:11px;color:#8d98b5;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#263b3c;border:1px solid #72e1ca;color:#ecfff8;border-radius:14px;padding:12px 18px;z-index:20;box-shadow:0 10px 40px #0009;max-width:min(90vw,500px);font-size:13px;text-align:center}.hidden{display:none!important}
+    @media(max-width:700px){.shell{width:min(100% - 22px,600px)}.topbar{align-items:flex-start}.brand h1{font-size:20px}.logo{width:40px;height:40px}.save-state{font-size:10px}.hero{padding:16px}.hero:after{font-size:66px;right:8px;top:18px}.hero h2{font-size:22px}.hero p{max-width:275px;font-size:12px}.tabs{gap:5px;margin-bottom:12px}.tab{padding:11px 1px;font-size:12px}.panel{padding:14px}.card-grid,.card-grid.catalog,.card-grid.deck-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.game-card{padding:12px;min-height:188px}.card-name{font-size:16px;margin:15px 0 6px}.card-desc{font-size:10px}.score-board{gap:6px;padding:14px}.score-person .num{font-size:29px}.vs{font-size:18px}.prompt{padding:16px}.intro{grid-template-columns:1fr;padding:22px}.intro-mark{display:none}.intro h3{font-size:23px}.how{grid-template-columns:1fr}.split{grid-template-columns:1fr}.result-panel .versus{gap:5px}.versus .game-card{padding:10px;min-height:195px}.versus .game-card .card-name{font-size:14px}.versus .game-card .card-desc{font-size:10px}.versus .middle{font-size:13px}.result-detail .cols{grid-template-columns:1fr}.gacha-result{align-items:flex-start;gap:10px}.gacha-result .game-card{min-height:190px}}
+    @media(max-width:360px){.brand h1{font-size:17px}.logo{display:none}.topright .save-state{display:none}.game-card{padding:9px}.card-name{font-size:15px}.pill{font-size:10px}.score-person strong{font-size:12px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand"><div class="logo" aria-hidden="true">⚔️</div><div><div class="eyebrow">BROWSER CARD BATTLE · v0.1</div><h1>レスバ道場</h1></div></div>
+      <div class="topright"><span class="coin" id="coin-display" aria-label="所持コイン">🪙 400</span><span class="save-state" id="save-status">● 自動セーブ</span></div>
+    </header>
+    <div class="hero"><div><div class="tag">ひとり用・完全無料・ログイン不要</div><h2>その一言で、流れを変えろ。</h2><p>カードの相性を読んでCPUに勝とう。5本勝負、3本先取。</p></div></div>
+    <nav class="tabs" role="tablist" aria-label="ゲームメニュー">
+      <button class="tab" type="button" role="tab" id="tab-battle" aria-controls="battle" aria-selected="true" data-tab="battle">⚔️ 対戦</button>
+      <button class="tab" type="button" role="tab" id="tab-deck" aria-controls="deck" aria-selected="false" data-tab="deck">🃏 デッキ</button>
+      <button class="tab" type="button" role="tab" id="tab-gacha" aria-controls="gacha" aria-selected="false" data-tab="gacha">🎁 ガチャ</button>
+      <button class="tab" type="button" role="tab" id="tab-catalog" aria-controls="catalog" aria-selected="false" data-tab="catalog">📚 図鑑</button>
+    </nav>
+    <main class="content">
+      <section id="battle" class="section active" role="tabpanel" aria-labelledby="tab-battle"></section>
+      <section id="deck" class="section" role="tabpanel" aria-labelledby="tab-deck"></section>
+      <section id="gacha" class="section" role="tabpanel" aria-labelledby="tab-gacha"></section>
+      <section id="catalog" class="section" role="tabpanel" aria-labelledby="tab-catalog"></section>
+    </main>
+    <footer class="footer"><span>レスバ道場 v0.1 · オリジナルのブラウザゲーム</span><span>データはこのブラウザ内に保存されます。端末間の自動同期はありません。</span></footer>
+  </div>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  <script>
+  (() => {
+    'use strict';
+    const STORAGE_KEY = 'resuba-dojo.save.v1';
+    const START_COINS = 400;
+    const GACHA_COST = 200;
+    const TYPE = {
+      '論理': {icon:'🧠', color:'#72b8ff', beats:'勢い'},
+      '証拠': {icon:'📎', color:'#81e4c4', beats:'論理'},
+      '勢い': {icon:'🔥', color:'#ffab79', beats:'ネタ'},
+      'ネタ': {icon:'🤣', color:'#d3a8ff', beats:'証拠'}
+    };
+    // starter=true のカード12枚で最初のデッキを構成します。
+    const CARDS = [
+      {id:'c01',name:'それ、論点違うよ',type:'論理',power:5,rarity:'N',desc:'話題をまっすぐ戻す。',starter:true},
+      {id:'c02',name:'順番に説明して',type:'論理',power:4,rarity:'N',desc:'落ち着いて整理整頓。',starter:true},
+      {id:'c03',name:'つまりこういうこと？',type:'論理',power:3,rarity:'N',desc:'要約で一歩リード。',starter:true},
+      {id:'c04',name:'ソースあります？',type:'証拠',power:5,rarity:'N',desc:'根拠を求める定番技。',starter:true},
+      {id:'c05',name:'スクショ保存した',type:'証拠',power:4,rarity:'N',desc:'記録は意外と強い。',starter:true},
+      {id:'c06',name:'時系列を見よう',type:'証拠',power:3,rarity:'N',desc:'記憶より記録。',starter:true},
+      {id:'c07',name:'異議あり！',type:'勢い',power:5,rarity:'N',desc:'大声で場を制圧。',starter:true},
+      {id:'c08',name:'待った待った！',type:'勢い',power:4,rarity:'N',desc:'怒涛のストップ。',starter:true},
+      {id:'c09',name:'まだ終わってない！',type:'勢い',power:3,rarity:'N',desc:'最後まで食い下がる。',starter:true},
+      {id:'c10',name:'草生えた',type:'ネタ',power:5,rarity:'N',desc:'笑いの空気に持ち込む。',starter:true},
+      {id:'c11',name:'お茶でも飲もう',type:'ネタ',power:4,rarity:'N',desc:'突然の休憩提案。',starter:true},
+      {id:'c12',name:'それはそれで草',type:'ネタ',power:3,rarity:'N',desc:'笑顔で方向転換。',starter:true},
+      {id:'c13',name:'前提から違います',type:'論理',power:6,rarity:'N',desc:'土台ごと組み直す。'},
+      {id:'c14',name:'三行で頼む',type:'論理',power:5,rarity:'N',desc:'長文に鋭い一撃。'},
+      {id:'c15',name:'公式発表を確認',type:'証拠',power:6,rarity:'N',desc:'一次資料を持ってきた。'},
+      {id:'c16',name:'ログ残ってるよ',type:'証拠',power:5,rarity:'N',desc:'いつでも照合できる。'},
+      {id:'c17',name:'全力で反論！',type:'勢い',power:6,rarity:'N',desc:'テンション最高潮。'},
+      {id:'c18',name:'優勝でいい？',type:'ネタ',power:6,rarity:'N',desc:'勝手に表彰式開始。'},
+      {id:'c19',name:'論点を固定する',type:'論理',power:7,rarity:'R',desc:'逃げ道をふさぐ整理術。'},
+      {id:'c20',name:'元データ提示！',type:'証拠',power:7,rarity:'R',desc:'数字で静かに説得。'},
+      {id:'c21',name:'勢いだけは最強',type:'勢い',power:7,rarity:'R',desc:'熱量が画面を越える。'},
+      {id:'c22',name:'座布団一枚！',type:'ネタ',power:7,rarity:'R',desc:'一瞬で大喜利に変える。'},
+      {id:'c23',name:'完全論破…の構え',type:'論理',power:8,rarity:'SR',desc:'満を持して結論を放つ。'},
+      {id:'c24',name:'伝説のコピペ職人',type:'ネタ',power:8,rarity:'SR',desc:'スレの空気を一変させる。'}
+    ];
+    const CARD_BY_ID = Object.fromEntries(CARDS.map(c=>[c.id,c]));
+    const START_DECK = CARDS.filter(c=>c.starter).map(c=>c.id);
+    const PROMPTS = [
+      {text:'「その説明、なんか矛盾してない？」',type:'論理',hint:'筋道を立てて反論しよう'},
+      {text:'「結局、何が言いたいの？」',type:'論理',hint:'論点を整理できるか'},
+      {text:'「話がどんどん逸れてるぞ！」',type:'論理',hint:'本題に引き戻せ'},
+      {text:'「それ、どこに書いてあるの？」',type:'証拠',hint:'出典を示して説得しよう'},
+      {text:'「そんな発言してないはず！」',type:'証拠',hint:'記録を確認する好機'},
+      {text:'「データがないと信じられない！」',type:'証拠',hint:'根拠の強さがものを言う'},
+      {text:'「ちょっと押されてるぞ！」',type:'勢い',hint:'流れを奪い返せ'},
+      {text:'「盛り上がりが足りない！」',type:'勢い',hint:'勢いで押し切れるか'},
+      {text:'「相手が畳みかけてきた！」',type:'勢い',hint:'ひるまず言い返そう'},
+      {text:'「スレが妙に静かになった…」',type:'ネタ',hint:'空気を変えるチャンス'},
+      {text:'「誰か面白いこと言って！」',type:'ネタ',hint:'笑いを取れば優勢だ'},
+      {text:'「マジレスが続いている…」',type:'ネタ',hint:'ここはボケどころかも'}
+    ];
+    const $ = (selector, root=document) => root.querySelector(selector);
+    const escapeHTML = s => String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const shuffle = arr => {const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+    const pick = a => a[Math.floor(Math.random()*a.length)];
+    const initial = () => ({version:1,coins:START_COINS,owned:[...START_DECK],deck:[...START_DECK],wins:0,losses:0,match:null});
+    let canSave = true;
+    function load(){
+      let raw;
+      try{raw=localStorage.getItem(STORAGE_KEY);}catch(err){canSave=false;return initial();}
+      if(!raw)return initial();
+      try{
+        const v=JSON.parse(raw);
+        if(!v || v.version!==1) return initial();
+        const owned = [...new Set(Array.isArray(v.owned) ? v.owned.filter(id=>CARD_BY_ID[id]):START_DECK)];
+        const fullOwned = [...new Set([...START_DECK,...owned])];
+        let deck = Array.isArray(v.deck)?[...new Set(v.deck.filter(id=>fullOwned.includes(id)))]:[...START_DECK];
+        if(deck.length!==12)deck=[...START_DECK];
+        const state={version:1,coins:Number.isSafeInteger(v.coins)&&v.coins>=0?v.coins:START_COINS,owned:fullOwned,deck,wins:Number.isSafeInteger(v.wins)&&v.wins>=0?v.wins:0,losses:Number.isSafeInteger(v.losses)&&v.losses>=0?v.losses:0,match:null};
+        if(v.match && validateMatch(v.match))state.match=v.match;
+        return state;
+      }catch(err){return initial();}
+    }
+    function validateMatch(m){
+      return Number.isInteger(m.round)&&m.round>=0&&m.round<5 && Number.isInteger(m.wins)&&m.wins>=0&&m.wins<=3 && Number.isInteger(m.losses)&&m.losses>=0&&m.losses<=3 && Array.isArray(m.prompts)&&m.prompts.length===5&&m.prompts.every(i=>Number.isInteger(i)&&i>=0&&i<PROMPTS.length) && Array.isArray(m.hand)&&m.hand.every(id=>CARD_BY_ID[id])&&m.hand.length<=4 && Array.isArray(m.remaining)&&m.remaining.every(id=>CARD_BY_ID[id])&& ['choose','reveal','done'].includes(m.phase) && (!m.lastResult || (CARD_BY_ID[m.lastResult.player] && CARD_BY_ID[m.lastResult.cpu]));
+    }
+    let state=load();
+    let activeTab='battle';
+    let pendingCard=null;
+    let pendingSlot=null;
+    let gachaResult=null;
+    let toastTimeout=null;
+    function save(){
+      try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));canSave=true;}
+      catch(err){canSave=false;}
+    }
+    function toast(s){
+      const el=$('#toast');el.textContent=s;el.classList.remove('hidden');
+      if(toastTimeout)clearTimeout(toastTimeout);
+      toastTimeout=setTimeout(()=>el.classList.add('hidden'),2600);
+    }
+    function cardHTML(c,options={}){
+      const t=TYPE[c.type];
+      const {action='',label='',selected=false,locked=false,extra=''}=options;
+      const title=locked?'？？？':c.name;
+      const body=locked?'ガチャで入手すると表示されます。':c.desc;
+      const attr=action?` data-action="${escapeHTML(action)}" data-id="${escapeHTML(c.id)}"` : '';
+      const aria=action?` aria-label="${escapeHTML(c.name)}：${escapeHTML(label)}"` : '';
+      const cls=`game-card${selected?' selected':''}${locked?' locked':''}`;
+      return `<${action?'button type="button"':'div'} class="${cls}" style="--card-color:${t.color}" data-glyph="${t.icon}"${attr}${aria}>
+        <div class="card-top"><span class="card-type">${t.icon} ${escapeHTML(c.type)}</span><span class="card-rarity">${c.rarity==='SR'?'★★★':c.rarity==='R'?'★★':'★'} ${c.rarity}</span></div>
+        <div class="card-name">${escapeHTML(title)}</div><p class="card-desc">${escapeHTML(body)}</p>
+        <div class="card-foot"><span class="power">POWER <b>${locked?'?':c.power}</b></span>${label?`<span class="card-action">${escapeHTML(label)}</span>`:''}</div>
+        ${extra?`<div class="card-action" style="margin-top:6px">${escapeHTML(extra)}</div>`:''}
+      </${action?'button':'div'}>`;
+    }
+    function scoreCard(card,opp,prompt){
+      return {base:card.power,topic:card.type===prompt.type?3:0,advantage:TYPE[card.type].beats===opp.type?2:0,total:card.power+(card.type===prompt.type?3:0)+(TYPE[card.type].beats===opp.type?2:0)};
+    }
+    function newMatch(){
+      const freshDeck=shuffle(state.deck);
+      const promptIds=shuffle(PROMPTS.map((_,i)=>i)).slice(0,5);
+      state.match={round:0,wins:0,losses:0,prompts:promptIds,hand:freshDeck.slice(0,4),remaining:freshDeck.slice(4),phase:'choose',lastResult:null,used:[]};
+      save();render();
+    }
+    function cpuChoose(prompt){
+      const pool=CARDS.filter(c=>c.starter || c.rarity==='N');
+      const choices=shuffle(pool).slice(0,4);
+      if(Math.random()<.48){const matching=choices.filter(c=>c.type===prompt.type);if(matching.length)return matching.sort((a,b)=>b.power-a.power)[0];}
+      return pick(choices);
+    }
+    function playCard(id){
+      const m=state.match;
+      if(!m||m.phase!=='choose'||!m.hand.includes(id))return;
+      const prompt=PROMPTS[m.prompts[m.round]];
+      const player=CARD_BY_ID[id],cpu=cpuChoose(prompt);
+      const ps=scoreCard(player,cpu,prompt),cs=scoreCard(cpu,player,prompt);
+      // 引き分けは素のPOWER、それも同じ場合は公平なコイントスで必ず決着します。
+      const playerWon = ps.total!==cs.total ? ps.total>cs.total : ps.base!==cs.base?ps.base>cs.base : Math.random()<.5;
+      if(playerWon)m.wins++; else m.losses++;
+      m.hand=m.hand.filter(x=>x!==id);
+      m.used.push(id);
+      m.phase='reveal';
+      m.lastResult={player:id,cpu:cpu.id,playerScore:ps,cpuScore:cs,playerWon,tie:ps.total===cs.total,round:m.round};
+      save();render();
+    }
+    function nextRound(){
+      const m=state.match;
+      if(!m||m.phase!=='reveal')return;
+      if(m.wins===3||m.losses===3||m.round===4){
+        m.phase='done';
+        const won=m.wins>m.losses;
+        if(won){state.wins++;state.coins+=150;}else{state.losses++;state.coins+=70;}
+      }else{
+        m.round++;
+        if(m.remaining.length){m.hand.push(m.remaining.shift());}
+        m.phase='choose';m.lastResult=null;
+      }
+      save();render();
+    }
+    function scoreboard(m){
+      const pips=(n)=>[0,1,2].map(i=>`<span class="pip${i<n?' on':''}"></span>`).join('');
+      return `<div class="score-board" aria-label="勝利数 プレイヤー${m.wins} 対 CPU${m.losses}">
+        <div class="score-person"><strong>YOU / あなた</strong><span class="num">${m.wins}</span><div class="wins">${pips(m.wins)}</div></div>
+        <div><div class="vs">VS</div><span class="round-chip">${m.phase==='done'?'FINISH':`ROUND ${m.round+1} / 5`}</span></div>
+        <div class="score-person right"><strong>CPU / 道場主</strong><span class="num">${m.losses}</span><div class="wins">${pips(m.losses)}</div></div>
+      </div>`;
+    }
+    function guide(){return `<div class="panel"><h3>勝負のコツ</h3><p class="secondary">各カードの POWER に、お題との一致・相性ボーナスを足して競います。</p>
+      <div class="how" style="margin-top:13px"><div><b>🎯 お題一致 ＋3</b>お題とカードが同じタイプなら加点。</div><div><b>⚡ 相性有利 ＋2</b>論理 → 勢い → ネタ → 証拠 → 論理 の順に有利。</div><div><b>🏆 3本先取</b>各ラウンドで1枚使用。5戦以内で3勝すれば勝ち！</div></div>
+      <p class="mini-info">同点のときはPOWERの高いカードが勝利。それも同じ場合は50%の判定勝負です。</p></div>`;}
+    function renderBattle(){
+      const m=state.match;
+      if(!m){
+        return `<div class="panel intro"><div><span class="pill green">🟢 CPU対戦 / ひとり用</span><h3>言葉のカードで、<br>道場主を倒せ。</h3><p>12枚のデッキから4枚が手札に。毎ラウンド1枚を選んで、CPUのカードと対決しよう。使ったカードはその試合中は戻りません。</p><div class="stack"><button class="btn primary" data-action="start">⚔️ CPUに挑戦する</button><span class="mini-info">1試合 約2〜3分</span></div></div><div class="intro-mark" aria-hidden="true">🃏⚡</div></div>
+        <div class="panel"><div class="panel-head"><div><h3>あなたの戦績</h3><p>自動保存されています</p></div><span class="pill gold">勝利報酬 +150 🪙</span></div><div class="stack"><div class="stat"><strong>${state.wins}</strong><span>勝利</span></div><div class="stat"><strong>${state.losses}</strong><span>敗北</span></div><div class="stat"><strong>${state.wins+state.losses}</strong><span>総試合数</span></div></div></div>${guide()}`;
+      }
+      let html=scoreboard(m);
+      if(m.phase==='choose'){
+        const prompt=PROMPTS[m.prompts[m.round]];
+        html+=`<div class="prompt"><span class="pill green">お題 ${m.round+1} / 5</span><span class="pill">${TYPE[prompt.type].icon} ${prompt.type} が有利 +3</span><h3>${escapeHTML(prompt.text)}</h3><p>${escapeHTML(prompt.hint)}</p></div>`;
+        html+=`<div class="hand-header"><h3>使うカードを選ぼう</h3><p>手札 ${m.hand.length} 枚 / 使用済み ${m.used.length} 枚</p></div>`;
+        html+=`<div class="card-grid">${m.hand.map(id=>cardHTML(CARD_BY_ID[id],{action:'play',label:CARD_BY_ID[id].type===prompt.type?'お題一致 +3':'使用する'})).join('')}</div>`;
+        html+=`<div class="notice" style="margin-top:14px"><b>ヒント：</b> 相手のカードは選択後に公開。カードのPOWERとお題のタイプを見て選ぼう！</div>`;
+      }else if(m.phase==='reveal'){
+        const r=m.lastResult,p=CARD_BY_ID[r.player],c=CARD_BY_ID[r.cpu];
+        html+=`<div class="panel result-panel" aria-live="polite"><span class="pill ${r.playerWon?'green':'pink'}">第 ${r.round+1} ラウンド結果</span><div class="result-title ${r.playerWon?'win':'lose'}">${r.playerWon?'あなたの勝ち！ ✨':'CPUの勝ち！ 💥'}</div>
+          <div class="versus"><div>${cardHTML(p)}<div class="score-label">あなた <strong>${r.playerScore.total}</strong></div></div><div class="middle">VS</div><div>${cardHTML(c)}<div class="score-label">CPU <strong>${r.cpuScore.total}</strong></div></div></div>
+          <div class="result-detail"><div class="cols"><div><b>あなたの得点</b><br>POWER ${r.playerScore.base} + お題 ${r.playerScore.topic} + 相性 ${r.playerScore.advantage} = <b>${r.playerScore.total}</b></div><div><b>CPUの得点</b><br>POWER ${r.cpuScore.base} + お題 ${r.cpuScore.topic} + 相性 ${r.cpuScore.advantage} = <b>${r.cpuScore.total}</b></div></div>${r.tie?'<div style="margin-top:5px">※ 合計同点のため、POWER優先／同POWER時は抽選で決着。</div>':''}</div>
+          <button class="btn primary wide" data-action="next">${m.wins===3||m.losses===3||m.round===4?'試合結果を見る →':'次のラウンドへ →'}</button></div>`;
+      }else{
+        const won=m.wins>m.losses;
+        html+=`<div class="panel result-panel" aria-live="polite"><div style="font-size:65px">${won?'🏆':'🥊'}</div><span class="pill ${won?'green':'pink'}">試合終了</span><div class="result-title ${won?'win':'lose'}">${won?'道場主に勝利！':'惜しくも敗北！'}</div><p class="secondary">${m.wins} 勝 ${m.losses} 敗で決着。<br>報酬として <strong style="color:var(--gold)">${won?150:70} コイン</strong> を獲得しました。</p><div class="stack" style="justify-content:center;margin-top:20px"><button class="btn primary" data-action="newmatch">もう一度対戦</button><button class="btn soft" data-action="jump-deck">デッキを見直す</button></div></div>`;
+      }
+      html+=`<div class="stack" style="justify-content:space-between;margin:14px 0"><span class="mini-info">通算 ${state.wins} 勝 / ${state.losses} 敗</span>${m.phase!=='done'?'<button class="btn soft small" data-action="restart">この試合をやり直す</button>':''}</div>`;
+      html+=guide();
+      return html;
+    }
+    function renderDeck(){
+      const current=state.deck.map(id=>CARD_BY_ID[id]);
+      const reserve=state.owned.filter(id=>!state.deck.includes(id)).map(id=>CARD_BY_ID[id]);
+      return `<div class="panel"><div class="panel-head"><div><h3>マイデッキ</h3><p>12枚固定。タイプのバランスが大切です。</p></div><span class="pill green">${current.length} / 12 枚</span></div>
+        <div class="notice"><b>入れ替え方：</b> ${pendingCard?`「${escapeHTML(CARD_BY_ID[pendingCard].name)}」を選択中。下のデッキから差し替えるカードをタップ！`:pendingSlot?`「${escapeHTML(CARD_BY_ID[pendingSlot].name)}」を交換対象に選択中。下の所持カードから入れるカードをタップ！`:'下の「控えカード」を選び、デッキ内のカードをタップして交換。デッキ側を先に選んでもOK。'}${pendingCard||pendingSlot?'<button class="btn soft small" data-action="cancel-swap" style="margin-left:8px">選択解除</button>':''}</div>
+        <div class="card-grid deck-grid">${current.map(c=>cardHTML(c,{action:'deckslot',label:pendingCard?'ここに交換':'デッキ採用中',selected:pendingSlot===c.id})).join('')}</div>
+        <h4 class="section-subtitle">控えカード（${reserve.length}枚）</h4>${reserve.length?`<div class="card-grid">${reserve.map(c=>cardHTML(c,{action:'reserve',label:pendingSlot?'このカードに交換':'デッキに入れる',selected:pendingCard===c.id})).join('')}</div>`:'<div class="empty">まだ控えカードがありません。ガチャで新しいカードを集めよう！</div>'}
+        <p class="mini-info">※ デッキの変更は次の試合から反映されます。</p></div>`;
+    }
+    function renderGacha(){
+      const g=gachaResult;
+      return `<div class="panel"><div class="gacha-hero"><div class="gacha-symbol" aria-hidden="true">🎁</div><span class="pill gold">ゲーム内コインだけで遊べる</span><h3>新カードを引こう！</h3><p class="secondary">未所持カードを狙ってデッキを強化。実際のお金は一切使いません。</p><p style="font-size:19px;font-weight:900;margin:15px 0 9px">1回 🪙 ${GACHA_COST} <span class="mini-info">（所持 ${state.coins}）</span></p><button class="btn primary" data-action="draw" ${state.coins<GACHA_COST?'disabled':''}>✨ ガチャを1回引く</button>${state.coins<GACHA_COST?'<p class="mini-info">コイン不足。CPU対戦で獲得できます。</p>':''}</div>
+        ${g?`<div class="gacha-result">${cardHTML(CARD_BY_ID[g.id])}<div><span class="pill ${g.duplicate?'pink':'green'}">${g.duplicate?'重複':'NEW!'}</span><h4>${escapeHTML(CARD_BY_ID[g.id].name)}</h4><p>${g.duplicate?'所持済みだったので60コインが戻ってきました。':'新カード獲得！デッキ画面から入れ替えできます。'}</p></div></div>`:''}
+        <h4 class="section-subtitle">排出確率とルール</h4><div class="how"><div><b>★ N / 60%</b>ノーマルカード</div><div><b>★★ R / 32%</b>レアカード</div><div><b>★★★ SR / 8%</b>スーパーレア</div></div><p class="mini-info">※ 排出対象は追加カード12種類。各レアリティ内では等確率。重複時は60コイン返還。天井や未所持保証はありません。</p></div><div style="text-align:right;margin:6px 0 15px"><button class="btn warn small" data-action="reset">⚠ ゲームデータを初期化</button></div>`;
+    }
+    function renderCatalog(){
+      const owned=new Set(state.owned);
+      return `<div class="panel"><div class="panel-head"><div><h3>カード図鑑</h3><p>全部で24種類。未入手のカードは？？？で表示。</p></div><span class="pill gold">${owned.size} / ${CARDS.length} 種</span></div><div class="card-grid catalog">${CARDS.map(c=>cardHTML(c,{locked:!owned.has(c.id),extra:owned.has(c.id)?(state.deck.includes(c.id)?'デッキ採用中':'所持'):'未入手'})).join('')}</div></div>`;
+    }
+    function render(){
+      $('#coin-display').textContent=`🪙 ${state.coins.toLocaleString('ja-JP')}`;
+      const status=$('#save-status');status.textContent=canSave?'● 自動セーブ':'⚠ 保存できません';status.classList.toggle('failed',!canSave);
+      const renderers={battle:renderBattle,deck:renderDeck,gacha:renderGacha,catalog:renderCatalog};
+      // アクティブな画面のみ描画して、画面遷移・スマホ操作を軽く保ちます。
+      for(const tab of Object.keys(renderers)){
+        const panel=$('#'+tab),button=$('#tab-'+tab),on=activeTab===tab;
+        panel.classList.toggle('active',on);button.setAttribute('aria-selected',String(on));
+        button.tabIndex=on?0:-1;
+        if(on)panel.innerHTML=renderers[tab]();
+      }
+    }
+    function setTab(tab){
+      if(!['battle','deck','gacha','catalog'].includes(tab))return;
+      activeTab=tab;render();
+    }
+    function swap(outId,inId){
+      if(!state.deck.includes(outId)||!state.owned.includes(inId)||state.deck.includes(inId)||outId===inId)return;
+      state.deck=state.deck.map(id=>id===outId?inId:id);
+      pendingCard=null;pendingSlot=null;
+      save();render();toast('デッキを入れ替えました。次の試合から有効！');
+    }
+    function drawGacha(){
+      if(state.coins<GACHA_COST){toast('コインが足りません。');return;}
+      const rate=Math.random(),rarity=rate<.60?'N':rate<.92?'R':'SR';
+      const candidates=CARDS.filter(c=>!c.starter && c.rarity===rarity);
+      const c=pick(candidates),duplicate=state.owned.includes(c.id);
+      state.coins-=GACHA_COST;
+      if(duplicate)state.coins+=60;else state.owned.push(c.id);
+      gachaResult={id:c.id,duplicate};
+      save();render();
+    }
+    function resetAll(){
+      if(!confirm('レスバ道場の戦績・所持カード・コインをすべて初期化します。元に戻せません。実行しますか？'))return;
+      state=initial();pendingCard=null;pendingSlot=null;gachaResult=null;
+      try{localStorage.removeItem(STORAGE_KEY);}catch(err){canSave=false;}
+      save();render();toast('ゲームデータを初期化しました。');
+    }
+    document.addEventListener('click',e=>{
+      const tab=e.target.closest('[data-tab]');if(tab){setTab(tab.dataset.tab);return;}
+      const el=e.target.closest('[data-action]');if(!el)return;
+      const action=el.dataset.action,id=el.dataset.id;
+      if(action==='start'||action==='newmatch'){newMatch();return;}
+      if(action==='play'){playCard(id);return;}
+      if(action==='next'){nextRound();return;}
+      if(action==='restart'){
+        if(confirm('現在の試合を破棄して、最初からやり直しますか？（コインは獲得できません）'))newMatch();return;
+      }
+      if(action==='jump-deck'){setTab('deck');return;}
+      if(action==='deckslot'){
+        if(pendingCard)swap(id,pendingCard);
+        else {pendingSlot=pendingSlot===id?null:id;render();}
+        return;
+      }
+      if(action==='reserve'){
+        if(!state.owned.includes(id)||state.deck.includes(id))return;
+        if(pendingSlot)swap(pendingSlot,id);
+        else{pendingCard=pendingCard===id?null:id;render();}
+        return;
+      }
+      if(action==='cancel-swap'){pendingCard=null;pendingSlot=null;render();return;}
+      if(action==='draw'){drawGacha();return;}
+      if(action==='reset'){resetAll();return;}
+    });
+    document.addEventListener('keydown',e=>{
+      if(e.target.matches('[role="tab"]')&&['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){
+        e.preventDefault();const t=['battle','deck','gacha','catalog'];let i=t.indexOf(activeTab);
+        i=e.key==='Home'?0:e.key==='End'?3:(i+(e.key==='ArrowRight'?1:3))%4;
+        setTab(t[i]);$('#tab-'+t[i]).focus();
+      }
+    });
+    // 初期データは他アプリのlocalStorageを触らない固有キーで保存します。
+    save();render();
+  })();
+  </script>
+</body>
+</html>
